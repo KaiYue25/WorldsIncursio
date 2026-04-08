@@ -1,4 +1,5 @@
 #include "main.h"
+#include "autons.hpp"
 #include "subsystems.hpp"
 
 /////
@@ -21,7 +22,7 @@ ez::Drive chassis(
 //  - you should get positive values on the encoders going FORWARD and RIGHT
 // - `2.75` is the wheel diameter
 // - `4.0` is the distance from the center of the wheel to the center of the robot
- ez::tracking_wheel horiz_tracker(13, 2.00, -1.7);  // This tracking wheel is perpendicular to the drive wheels
+ ez::tracking_wheel horiz_tracker(13, 2.00, -1.75);  // This tracking wheel is perpendicular to the drive wheels
  ez::tracking_wheel vert_tracker(12, 2.00, 0.03);   // This tracking wheel is parallel to the drive wheels
 
 /**
@@ -60,6 +61,8 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.autons_add({
+      {"RedRightSide\n\n FourBlockRush", RedRightFourRushWing},
+      
       {"Drive\n\nDrive forward and come back", drive_example},
       {"Turn\n\nTurn 3 times.", turn_example},
       {"Drive and Turn\n\nDrive forward, turn, come back", drive_and_turn},
@@ -219,7 +222,7 @@ void ez_template_extras() {
       pros::motor_brake_mode_e_t preference = chassis.drive_brake_get();
       
       chassis.drive_brake_set(preference);
-      //odom_drive_example();
+      swing_example();
 
     }
 

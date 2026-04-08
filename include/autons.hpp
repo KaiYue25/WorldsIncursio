@@ -11,6 +11,35 @@ void grab_blue_reject_red();
 void grab_red_reject_blue();
 
 
+// Red Side Autons
+void RedRightFourRushWing();
+
+//Blue Side Autons
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void drive_example();
 void turn_example();
 void drive_and_turn();

@@ -6,7 +6,7 @@
 /////
 
 // These are out of 127
-const int DRIVE_SPEED = 90;
+const int DRIVE_SPEED = 127;
 const int TURN_SPEED = 100;
 const int SWING_SPEED = 110;
 
@@ -15,7 +15,7 @@ const int SWING_SPEED = 110;
 ///
 void default_constants() {
   // P, I, D, and Start I
-  chassis.pid_drive_constants_set(200.0, 0.0, 0.0);         // Fwd/rev constants, used for odom and non odom motions
+  chassis.pid_drive_constants_set(16.0, 0.0,100.0);         // TUNED VALUE  chassis.pid_drive_constants_set(15.0, 0.0,100.0);         
   chassis.pid_heading_constants_set(11.0, 0.0, 20.0);        // Holds the robot straight while going forward without odom
   chassis.pid_turn_constants_set(3.0, 0.05, 20.0, 15.0);     // Turn in place constants
   chassis.pid_swing_constants_set(6.0, 0.0, 65.0);           // Swing constants
@@ -626,3 +626,54 @@ void grab_blue_reject_red() {
     intake.move(127); 
 }
 
+void RedRightFourRushWing() {
+  matchLoad.set(true);
+  //lift.set(true);
+  intake.move(127);
+  
+  // Into the Matchload!
+  chassis.pid_odom_set({{{0_in, 30_in}, fwd, DRIVE_SPEED}},
+                       true);
+  chassis.pid_wait(); 
+  chassis.pid_turn_set(-90_deg, TURN_SPEED); 
+  chassis.pid_wait_quick_chain();  
+  chassis.pid_odom_set(-1_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(1000);
+  chassis.pid_odom_set(14_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-120_deg, TURN_SPEED);
+  matchLoad.set(false);
+  chassis.pid_wait();
+    chassis.pid_odom_set(-10_in, DRIVE_SPEED);
+  chassis.pid_wait_quick_chain();  
+  grab_red_reject_blue();
+  
+  chassis.pid_odom_set({{{-20_in, 29_in}, fwd, DRIVE_SPEED}},
+                       true);
+  chassis.pid_wait();              
+  chassis.pid_odom_set(4_in, 127); // Alligner Lock
+  chassis.pid_wait();  // Long goal 
+
+    //Scoring
+  fireLever.fast(); 
+  pros::delay(200);
+  fireLever.down();
+  //Second Try if Ever
+  fireLever.fast(); 
+  pros::delay(200);
+  fireLever.down();
+  // Third Try
+  fireLever.fast(); 
+  pros::delay(200);
+  fireLever.down();
+
+  intake.move(0);  // Turn the intake off
+
+
+
+ // Matchload
+ 
+ // Long Score 4 Block,
+ // Wing
+}
