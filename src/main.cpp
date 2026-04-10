@@ -62,7 +62,7 @@ void initialize() {
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.autons_add({
       {"RedRightSide\n\n FourBlockRush", RedRightFourRushWing},
-      
+      {"RedTopBottom\n\n FourBlockRush", RedRightTopBottom},
       {"Drive\n\nDrive forward and come back", drive_example},
       {"Turn\n\nTurn 3 times.", turn_example},
       {"Drive and Turn\n\nDrive forward, turn, come back", drive_and_turn},
@@ -87,6 +87,7 @@ void initialize() {
   master.rumble(chassis.drive_imu_calibrated() ? "." : "---");
   chassis.pid_tuner_enable();
   ez::as::initialize();
+  pros::Task lever_task(leverState,"Lever Task");
 }
 
 /**
@@ -253,7 +254,7 @@ void ez_template_extras() {
 void opcontrol() {
   // This is preference to what you like to drive on
   chassis.drive_brake_set(MOTOR_BRAKE_COAST);
-   pros::Task lever_task(leverState,"Lever Task");
+   
  // pros::Task discore_task(discoreState, "Discore Task");
   
   while (true) {
@@ -266,13 +267,13 @@ void opcontrol() {
     if (master.get_digital(DIGITAL_L2))
       intake.move(127);
     else if (master.get_digital(DIGITAL_L1))
-      intake.move(-(127)*0.4);
+      intake.move(-(127)*0.8);
     else
       intake.move(0);
   
-      //  matchLoad.button_toggle(master.get_digital(DIGITAL_Y));
-      //  gate.button_toggle(master.get_digital(DIGITAL_DOWN));
-      //  lift.button_toggle(master.get_digital(DIGITAL_B));
+       matchLoad.button_toggle(master.get_digital(DIGITAL_Y));
+       gate.button_toggle(master.get_digital(DIGITAL_DOWN));
+       lift.button_toggle(master.get_digital(DIGITAL_B));
       
 
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME

@@ -1,4 +1,5 @@
 #include "main.h"
+#include "subsystems.hpp"
 
 /////
 // For installation, upgrading, documentations, and tutorials, check out our website!
@@ -412,7 +413,7 @@ void calibrateArms() {
 void leverState() {
     bool launching = false;
     // Hardstop Angles
-    const double maxUpAngle = 1200.0; 
+    const double maxUpAngle = 1300.0; 
     const double minDownAngle = 1.0;
     double halfAngle = maxUpAngle / (4.0);
 
@@ -572,7 +573,7 @@ void discoreState() {
 // 1. Write the simple color check function
 void grab_red_reject_blue() {
     
-    intake.move(-70); // Reverse the intake slowly to push out the blue blocks
+    intake.move(-85); // Reverse the intake slowly to push out the blue blocks
     
     int timeout = 0;
     
@@ -632,41 +633,105 @@ void RedRightFourRushWing() {
   intake.move(127);
   
   // Into the Matchload!
-  chassis.pid_odom_set({{{0_in, 30_in}, fwd, DRIVE_SPEED}},
+  chassis.pid_odom_set({{{0_in, 31_in}, fwd, DRIVE_SPEED}},
                        true);
   chassis.pid_wait(); 
   chassis.pid_turn_set(-90_deg, TURN_SPEED); 
-  chassis.pid_wait_quick_chain();  
-  chassis.pid_odom_set(-1_in, DRIVE_SPEED);
   chassis.pid_wait();
-  pros::delay(1000);
+  chassis.pid_drive_set(-15_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(350);
+  chassis.pid_drive_set(4.5_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(100);
+  chassis.pid_drive_set(-4.5_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(350);
   chassis.pid_odom_set(14_in, DRIVE_SPEED);
   chassis.pid_wait();
   chassis.pid_turn_set(-120_deg, TURN_SPEED);
   matchLoad.set(false);
-  chassis.pid_wait();
-    chassis.pid_odom_set(-10_in, DRIVE_SPEED);
-  chassis.pid_wait_quick_chain();  
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED);
+    chassis.pid_wait();
   grab_red_reject_blue();
-  
-  chassis.pid_odom_set({{{-20_in, 29_in}, fwd, DRIVE_SPEED}},
-                       true);
-  chassis.pid_wait();              
-  chassis.pid_odom_set(4_in, 127); // Alligner Lock
-  chassis.pid_wait();  // Long goal 
+//   chassis.pid_wait();
+ // Into the long goal!
+  chassis.pid_drive_set(2.8_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  chassis.pid_wait();
+//   chassis.pid_odom_set({{{-10_in, 35_in}, fwd, DRIVE_SPEED}},
+//                        true);
+//   chassis.pid_wait_quick_chain(); 
+  chassis.pid_drive_set(20_in, DRIVE_SPEED);
+//   chassis.pid_wait_quick_chain();  // Long goal aligning
+  chassis.pid_wait();
 
     //Scoring
   fireLever.fast(); 
-  pros::delay(200);
+  pros::delay(500);
   fireLever.down();
   //Second Try if Ever
   fireLever.fast(); 
-  pros::delay(200);
+  pros::delay(500);
   fireLever.down();
-  // Third Try
+
+  intake.move(0);  // Turn the intake off
+ // Matchload
+ 
+ // Wing
+
+}
+
+void RedRightTopBottom() {
+  matchLoad.set(true);
+  //lift.set(true);
+  intake.move(127);
+  
+  // Into the Matchload!
+  chassis.pid_odom_set({{{0_in, 31_in}, fwd, DRIVE_SPEED}},
+                       true);
+  chassis.pid_wait(); 
+  chassis.pid_turn_set(-90_deg, TURN_SPEED); 
+  chassis.pid_wait();
+  chassis.pid_drive_set(-15_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(350);
+  chassis.pid_drive_set(4.5_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(100);
+  chassis.pid_drive_set(-4.5_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(350);
+  chassis.pid_odom_set(14_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-120_deg, TURN_SPEED);
+  matchLoad.set(false);
+  chassis.pid_drive_set(-9_in, DRIVE_SPEED);
+    chassis.pid_wait();
+  grab_red_reject_blue();
+//   chassis.pid_wait();
+ // Into the long goal!
+  chassis.pid_drive_set(7.8_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  chassis.pid_wait();
+//   chassis.pid_odom_set({{{-10_in, 35_in}, fwd, DRIVE_SPEED}},
+//                        true);
+//   chassis.pid_wait_quick_chain(); 
+  chassis.pid_drive_set(20_in, DRIVE_SPEED);
+//   chassis.pid_wait_quick_chain();  // Long goal aligning
+  chassis.pid_wait();
+
+    //Scoring
   fireLever.fast(); 
-  pros::delay(200);
+  pros::delay(500);
   fireLever.down();
+  //Second Try if Ever
+  fireLever.fast(); 
+  pros::delay(500);
+  fireLever.down();
+
 
   intake.move(0);  // Turn the intake off
 
@@ -674,6 +739,5 @@ void RedRightFourRushWing() {
 
  // Matchload
  
- // Long Score 4 Block,
  // Wing
 }

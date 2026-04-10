@@ -13,6 +13,7 @@ void grab_red_reject_blue();
 
 // Red Side Autons
 void RedRightFourRushWing();
+void RedRightTopBottom();
 
 //Blue Side Autons
 

@@ -61,3 +61,27 @@ public:
 };
 
 inline LeverController fireLever;
+
+
+// enum LeverMode {LEVER_IDLE, LEVER_SLOW, LEVER_FAST};
+// extern Drive chassis;
+
+// // Define the global variable here
+// inline LeverMode auto_lever_mode = LEVER_IDLE; 
+// inline bool is_testing_auton = false;
+
+// // Lever Class
+// class LeverController {
+// public:
+//     void fast(int timeout = 1000) {
+//         auto_lever_mode = LEVER_FAST; 
+//         int time_spent = 0;
+//         while (lever.get_position() < 85.0 && time_spent < timeout) {
+//             pros::delay(20);
+//             time_spent += 20; 
+//         }
+//     }
+//     // ... keep your slow() and down() functions here too ...
+// };
+
+// inline LeverController fireLever;
