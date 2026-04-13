@@ -1,5 +1,9 @@
+#include "autons.hpp"
+#include "EZ-Template/drive/drive.hpp"
 #include "main.h"
+#include "pros/adi.hpp"
 #include "subsystems.hpp"
+// #include "pros/motors.hpp"
 
 /////
 // For installation, upgrading, documentations, and tutorials, check out our website!
@@ -335,7 +339,7 @@ void measure_offsets() {
     chassis.pid_targets_reset();
     chassis.drive_imu_reset();
     chassis.drive_sensor_reset();
-    chassis.drive_brake_set(MOTOR_BRAKE_HOLD);
+   // chassis.drive_brake_set(MOTOR_BRAKE_HOLD);
     chassis.odom_xyt_set(0_in, 0_in, 0_deg);
     double imu_start = chassis.odom_theta_get();
     double target = i % 2 == 0 ? 90 : 270;  // Switch the turn target every run from 270 to 90
@@ -384,7 +388,7 @@ void calibrateArms() {
     pros::delay(250); 
     // 3. Create tracking flags to know when each one is finished
     bool lever_done = false;
-    bool discore_done = true;
+    bool discore_done = false;
         
     // 4. We hit the bottom! Stop the motor.
 
@@ -427,17 +431,19 @@ void leverState() {
           }
         else {
             if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+              
                 current_mode = LEVER_FAST;
-            } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+                            } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
                 current_mode = LEVER_SLOW;
+                
             }
         }
 
         // 1. Fast Lever (R2)
         if (current_mode == LEVER_FAST) {
             if (!launching) {
-                gate.set(true);   // Command the gate to open
-                pros::delay(100); // Wait 100ms for the physical metal to move
+                //gate.set(true);   // Command the gate to open
+                pros::delay(400); // Wait 100ms for the physical metal to move
             }
             if (current_angle < maxUpAngle) {
                 lever.move_voltage(12000);
@@ -450,8 +456,8 @@ void leverState() {
         // 2. Slow Lever (R1) with Dynamic Start
         else if (current_mode == LEVER_SLOW) {
           if (!launching) {
-                gate.set(true);   // Command the gate to open
-                pros::delay(100); // Wait 100ms for the physical metal to move
+                //gate.set(true);   // Command the gate to open
+                pros::delay(400); // Wait 400ms for the physical metal to move
             }
             // First, make sure we haven't reached the absolute top
             if (current_angle < maxUpAngle) {
@@ -484,7 +490,7 @@ void leverState() {
                 } else {
                     // We reached the bottom safely! 
                     launching = false; // This triggers the 1V hold below
-                    gate.set(false);
+                    //gate.set(false);
                 }
             } else {
                 // Hold gently at 1V so it stays down.
@@ -497,75 +503,11 @@ void leverState() {
     }
 }
 
-// Define our three possible target states
+// // Define our three possible target states
 
-enum DiscoreState { DOWN, MID, UP };
 
-void discoreState() {
-    DiscoreState targetState = DOWN; 
 
-    // Dynamic Angles
-    const double upAngle = 45.0;   
-    double midOffset = 0.0;        
-    double midAngle = (upAngle / 5.0) + midOffset;
-    
-    // --- TUNED VARIABLES ---
-    double kP = 150.0;            
-    double anti_gravity = 2000.0; // INCREASED: Tune this higher if it still sags at MID!
-    double deadband = 3.0;        // Margin of error 
 
-    while (true) {
-        // 1. INPUT HANDLING
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {
-            targetState = UP;
-        } 
-        else if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
-            targetState = MID;
-        } 
-        else if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
-            targetState = DOWN;
-        }
-
-        // 2. MOTOR EXECUTION
-        if (targetState == DOWN) {
-            discore.move_voltage(-1000); 
-        } 
-        else {
-            double current_angle = discore.get_position();
-            double target_angle = (targetState == UP) ? upAngle : midAngle;
-            
-            double error = target_angle - current_angle;
-            double commanded_voltage;
-
-            // Are we at the target? Apply holding voltage.
-            if (std::abs(error) < deadband) {
-                commanded_voltage = anti_gravity; 
-            } 
-            // We need to move! Calculate the power.
-            else {
-                commanded_voltage = (error * kP) + anti_gravity;
-
-                // --- THE BREAKOUT CLAMP ---
-                // If we need to go UP, but the math is too weak, force a 5000mV push
-                if (error > 0 && commanded_voltage < 5000) {
-                    commanded_voltage = 5000; 
-                }
-                // If we need to go DOWN, but the math is fighting gravity, force a -3000mV pull
-                else if (error < 0 && commanded_voltage > -3000) {
-                    commanded_voltage = -3000; 
-                }
-            }
-            
-            // Safety Limits
-            if (commanded_voltage > 12000) commanded_voltage = 12000;
-            if (commanded_voltage < -12000) commanded_voltage = -12000;
-            
-            discore.move_voltage(commanded_voltage);
-        }
-
-        pros::delay(20);
-    }
-}
 
 
 // Optical
@@ -573,7 +515,7 @@ void discoreState() {
 // 1. Write the simple color check function
 void grab_red_reject_blue() {
     
-    intake.move(-85); // Reverse the intake slowly to push out the blue blocks
+    intake.move(-83); // Reverse the intake slowly to push out the blue blocks
     
     int timeout = 0;
     
@@ -601,7 +543,7 @@ void grab_red_reject_blue() {
 
 void grab_blue_reject_red() {
     
-    intake.move(-60); // Reverse the intake slowly to push out the red ring
+    intake.move(-82); // Reverse the intake slowly to push out the red ring
     
     int timeout = 0;
     
@@ -650,10 +592,13 @@ void RedRightFourRushWing() {
   chassis.pid_odom_set(14_in, DRIVE_SPEED);
   chassis.pid_wait();
   chassis.pid_turn_set(-120_deg, TURN_SPEED);
+  
   matchLoad.set(false);
+  // intake.move(0); // Turn off intake while we do the color check
   chassis.pid_drive_set(-5_in, DRIVE_SPEED);
-    chassis.pid_wait();
+    //chassis.pid_wait();
   grab_red_reject_blue();
+//   grab_blue_reject_red();
 //   chassis.pid_wait();
  // Into the long goal!
   chassis.pid_drive_set(2.8_in, DRIVE_SPEED);
@@ -681,9 +626,21 @@ void RedRightFourRushWing() {
  
  // Wing
 
+  chassis.pid_drive_set(-7_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-180_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(12_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(30_in, 60);
+  //chassis.pid_drive_set(30_in, DRIVE_SPEED); ORIGINAL SPEED VALUE
+  chassis.pid_wait_until_index(0);
+  
 }
 
-void RedRightTopBottom() {
+void BlueRightFourRushWing() {
   matchLoad.set(true);
   //lift.set(true);
   intake.move(127);
@@ -707,8 +664,77 @@ void RedRightTopBottom() {
   chassis.pid_wait();
   chassis.pid_turn_set(-120_deg, TURN_SPEED);
   matchLoad.set(false);
-  chassis.pid_drive_set(-9_in, DRIVE_SPEED);
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED);
     chassis.pid_wait();
+  // grab_red_reject_blue();
+  grab_blue_reject_red();
+//   chassis.pid_wait();
+ // Into the long goal!
+  chassis.pid_drive_set(2.8_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  chassis.pid_wait();
+//   chassis.pid_odom_set({{{-10_in, 35_in}, fwd, DRIVE_SPEED}},
+//                        true);
+//   chassis.pid_wait_quick_chain(); 
+  chassis.pid_drive_set(20_in, DRIVE_SPEED);
+//   chassis.pid_wait_quick_chain();  // Long goal aligning
+  chassis.pid_wait();
+
+    //Scoring
+  fireLever.fast(); 
+  pros::delay(500);
+  fireLever.down();
+  //Second Try if Ever
+  fireLever.fast(); 
+  pros::delay(500);
+  fireLever.down();
+
+  intake.move(0);  // Turn the intake off
+ // Matchload
+ 
+ // Wing
+
+  chassis.pid_drive_set(-7_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-180_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(12_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(30_in, 60);
+  //chassis.pid_drive_set(30_in, DRIVE_SPEED); ORIGINAL SPEED VALUE
+  chassis.pid_wait_until_index(0);
+  
+}
+
+void RedRightTopBottom() {
+  matchLoad.set(true);
+  //lift.set(true);
+  intake.move(127);
+  
+  // Into the Matchload!
+  chassis.pid_odom_set({{{0_in, 30_in}, fwd, DRIVE_SPEED}},
+                       true);
+  chassis.pid_wait(); 
+  chassis.pid_turn_set(-90_deg, TURN_SPEED); 
+  chassis.pid_wait();
+  chassis.pid_drive_set(-15_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(350);
+  chassis.pid_drive_set(4.5_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(100);
+  chassis.pid_drive_set(-4.5_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(350);
+  chassis.pid_odom_set(14_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-120_deg, TURN_SPEED);
+  matchLoad.set(false);
+  chassis.pid_drive_set(-9_in, DRIVE_SPEED);
+  chassis.pid_wait();
   grab_red_reject_blue();
 //   chassis.pid_wait();
  // Into the long goal!
@@ -740,4 +766,69 @@ void RedRightTopBottom() {
  // Matchload
  
  // Wing
+}
+void skills_final() {
+
+  //lift.set(true);
+  intake.move(127);
+  chassis.pid_odom_set({{{0_in, 31_in}, fwd, DRIVE_SPEED}}, // go to matchload with odom for better accuracy
+                       true); 
+  chassis.pid_wait(); 
+  chassis.pid_turn_set(-180_deg, TURN_SPEED); // Turn to face the 2 BLUE blocks
+  chassis.pid_wait();
+  chassis.pid_drive_set(-20_in, 45); // Back up slowly to let the blocks settle and be less likely to bounce out
+  chassis.pid_wait();
+  chassis.pid_drive_set(8_in, 45); // Nudge forward slowly to grab the blocks without bouncing them out
+  chassis.pid_wait();
+  chassis.pid_drive_set(-8_in, DRIVE_SPEED); // Back up to be safe before turning
+  chassis.pid_wait();
+  chassis.pid_drive_set(16_in, DRIVE_SPEED); // FOR CALIBRATION - Drive forward to the long goal
+  chassis.pid_wait();
+  chassis.pid_turn_set(-90_deg, TURN_SPEED); // Turn to face the long goal
+  chassis.pid_wait();
+  chassis.pid_drive_set(16_in, DRIVE_SPEED); // Drive forward to long goal
+  chassis.pid_wait();
+  fireLever.fast(); // Fire to the long goal
+  pros::delay(300);
+  fireLever.down();
+  pros::delay(100);
+  fireLever.fast(); // Fire to the long goal
+  pros::delay(400);
+  fireLever.down();
+
+
+  // 1ST MATCHLOAD  
+  matchLoad.set(true);
+  chassis.pid_drive_set(-50_in, DRIVE_SPEED); // Back up to take the matchload
+  chassis.pid_wait();
+  pros::delay(350);
+  chassis.pid_drive_set(5_in, DRIVE_SPEED); // Nudge forward to secure the matchload
+  chassis.pid_wait();
+  pros::delay(350);
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED); // Back up to be safe before turning
+  chassis.pid_wait();
+  pros::delay(350); // DONE MATCHLOADING
+    chassis.pid_odom_set({{{0_in, 31_in,-270_deg}, fwd, DRIVE_SPEED}}, //
+                       true);
+  chassis.pid_wait();
+  
+  
+
+
+
+  // chassis.pid_drive_set(-4.5in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // pros::delay(350);
+  // chassis.pid_odom_set(14in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_turn_set(-120_deg, TURN_SPEED);
+  // matchLoad.set(false);
+  // chassis.pid_drive_set(-9in, DRIVE_SPEED);
+  //   chassis.pid_wait();
+  // grab_red_reject_blue();
+}
+
+void discoreState() {
+
+
 }

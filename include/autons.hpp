@@ -5,17 +5,22 @@ void calibrateArms();
 void leverState();
 void discoreState();
 
+//   ROBOT SKILLS CHALLENGE WORLDS
+void skills_final();
+
 
 //Optical
 void grab_blue_reject_red();
 void grab_red_reject_blue();
 
 
-// Red Side Autons
+// Red Side 2V2 AUTONOMOUS WORLDS
 void RedRightFourRushWing();
 void RedRightTopBottom();
+void while_motor_at_rest();
 
-//Blue Side Autons
+//Blue Side 2V2 AUTONOMOUS WORLDS
+void BlueRightFourRushWing();
 
 
 
@@ -55,5 +60,3 @@ void odom_pure_pursuit_wait_until_example();
 void odom_boomerang_example();
 void odom_boomerang_injected_pure_pursuit_example();
 void measure_offsets();
-
-
