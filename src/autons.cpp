@@ -18,6 +18,9 @@ const int SWING_SPEED = 110;
 ///
 // Constants
 ///
+
+
+
 void default_constants() {
   // P, I, D, and Start I
   chassis.pid_drive_constants_set(16.0, 0.0,100.0);         // TUNED VALUE  chassis.pid_drive_constants_set(15.0, 0.0,100.0);         
@@ -442,7 +445,7 @@ void leverState() {
         // 1. Fast Lever (R2)
         if (current_mode == LEVER_FAST) {
             if (!launching) {
-                //gate.set(true);   // Command the gate to open
+                gate.set(true);   // Command the gate to open
                 pros::delay(400); // Wait 100ms for the physical metal to move
             }
             if (current_angle < maxUpAngle) {
@@ -456,7 +459,7 @@ void leverState() {
         // 2. Slow Lever (R1) with Dynamic Start
         else if (current_mode == LEVER_SLOW) {
           if (!launching) {
-                //gate.set(true);   // Command the gate to open
+                gate.set(true);   // Command the gate to open
                 pros::delay(400); // Wait 400ms for the physical metal to move
             }
             // First, make sure we haven't reached the absolute top
@@ -490,7 +493,7 @@ void leverState() {
                 } else {
                     // We reached the bottom safely! 
                     launching = false; // This triggers the 1V hold below
-                    //gate.set(false);
+                    gate.set(false);
                 }
             } else {
                 // Hold gently at 1V so it stays down.

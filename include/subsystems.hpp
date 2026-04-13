@@ -10,7 +10,7 @@ extern pros::Optical color_sensor;
 // Motors 
 inline pros::Motor intake(-3);
 inline pros::Motor lever(-2);
-inline pros::Motor discore(1);
+inline pros::Motor discore(-1);
 
 
 // Pneumatics

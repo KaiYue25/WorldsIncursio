@@ -425,8 +425,8 @@
     },
     "upload_options": {
       "description": "Coding is Ez",
-      "icon": "ufo",
-      "slot": 4
+      "icon": "pizza",
+      "slot": 7
     },
     "use_early_access": false
   }

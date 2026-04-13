@@ -8,6 +8,7 @@
 /////
 
 // Chassis constructor
+pros::Controller controller(pros::E_CONTROLLER_MASTER);
 ez::Drive chassis(
     // These are your drive motors, the first motor is used for sensing!
     {-8, -9,10},     // Left Chassis Ports (negative port will reverse it!) 8, 9,-10
@@ -22,7 +23,7 @@ ez::Drive chassis(
 //  - you should get positive values on the encoders going FORWARD and RIGHT
 // - `2.75` is the wheel diameter
 // - `4.0` is the distance from the center of the wheel to the center of the robot
- ez::tracking_wheel horiz_tracker(13, 2.00, -1.75);  // This tracking wheel is perpendicular to the drive wheels
+ ez::tracking_wheel horiz_tracker(-13, 2.00, -1.75);  // This tracking wheel is perpendicular to the drive wheels
  ez::tracking_wheel vert_tracker(12, 2.00, 0.03);   // This tracking wheel is parallel to the drive wheels
 
 /**
@@ -87,12 +88,20 @@ void initialize() {
   color_sensor.set_led_pwm(100);
   ez::as::initialize();
   master.rumble(chassis.drive_imu_calibrated() ? "." : "---");
-  chassis.pid_tuner_enable();
+  chassis.pid_tuner_disable();
   ez::as::initialize();
   pros::Task lever_task(leverState,"Lever Task");
-  pros::Task discore_task(discoreState, "Discore Task");
+  // pros::Task discore_task(discoreState, "Discore Task");
   
 
+}
+
+void descoreUp(){
+  discore.move_absolute(4500, 200);
+}
+
+void descoreDown(){
+  discore.move_absolute(0, 200);
 }
 
 /**
@@ -259,16 +268,33 @@ void ez_template_extras() {
 void opcontrol() {
   // This is preference to what you like to drive on
   chassis.drive_brake_set(MOTOR_BRAKE_COAST);
-   
-  
+
+  bool descoreFunc = false;
+  bool lastDescoreFunc = descoreFunc;
+
   while (true) {
+    // Toggle descore mode on/off with the DOWN button
+    if (master.get_digital_new_press(DIGITAL_DOWN)) {
+      descoreFunc = !descoreFunc;
+    }
+
+    // Only send a new descore command when the toggle state changes
+    if (descoreFunc != lastDescoreFunc) {
+      if (descoreFunc) {
+        descoreUp();
+      } else {
+        descoreDown();
+      }
+      lastDescoreFunc = descoreFunc;
+    }
+
     // Gives you some extras to make EZ-Template ezier
-    ez_template_extras();
+    //ez_template_extras();
    
     chassis.opcontrol_arcade_standard(ez::SPLIT);   // Standard split arcade
-    
 
     if (master.get_digital(DIGITAL_L2))
+    
       intake.move(127);
     else if (master.get_digital(DIGITAL_L1))
       intake.move(-(127)*0.8);
