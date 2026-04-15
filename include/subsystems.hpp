@@ -64,3 +64,35 @@ inline LeverController fireLever;
 
 
 
+class DiscoreController {
+public:
+    /**
+     * Moves the arm to the UP position.
+     * Uses 1300 as the target angle.
+     */
+    void up(int timeout = 1000) {
+        auto_lever_mode = LEVER_FAST; 
+        int time_spent = 0;
+        
+        while (discore.get_position() < 1300.0 && time_spent < timeout) {
+            pros::delay(20);
+            time_spent += 20;
+        }
+    }
+
+    /**
+     * Moves the arm to the DOWN position.
+     * Uses 1.0 as the target angle.
+     */
+    void down(int timeout = 1000) {
+        auto_lever_mode = LEVER_IDLE; 
+        int time_spent = 0;
+        
+        while (discore.get_position() > 1.0 && time_spent < timeout) {
+            pros::delay(20);
+            time_spent += 20;
+        }
+    }
+};
+
+inline DiscoreController firediscore;

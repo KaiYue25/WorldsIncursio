@@ -1,5 +1,6 @@
 #include "autons.hpp"
 #include "EZ-Template/drive/drive.hpp"
+#include "EZ-Template/util.hpp"
 #include "main.h"
 #include "pros/adi.hpp"
 #include "subsystems.hpp"
@@ -13,7 +14,7 @@
 // These are out of 127
 const int DRIVE_SPEED = 127;
 const int TURN_SPEED = 100;
-const int SWING_SPEED = 110;
+const int SWING_SPEED = 120;
 
 ///
 // Constants
@@ -25,7 +26,7 @@ void default_constants() {
   // P, I, D, and Start I
   chassis.pid_drive_constants_set(16.0, 0.0,100.0);         // TUNED VALUE  chassis.pid_drive_constants_set(15.0, 0.0,100.0);         
   chassis.pid_heading_constants_set(11.0, 0.0, 20.0);        // Holds the robot straight while going forward without odom
-  chassis.pid_turn_constants_set(3.0, 0.05, 20.0, 15.0);     // Turn in place constants
+  chassis.pid_turn_constants_set(2.0, 0.13, 20.0, 15.0);     // Turn in place constants
   chassis.pid_swing_constants_set(6.0, 0.0, 65.0);           // Swing constants
   chassis.pid_odom_angular_constants_set(6.5, 0.0, 52.5);    // Angular control for odom motions
   chassis.pid_odom_boomerang_constants_set(5.8, 0.0, 32.5);  // Angular control for boomerang motions
@@ -84,12 +85,16 @@ void turn_example() {
 
   chassis.pid_turn_set(90_deg, TURN_SPEED);
   chassis.pid_wait();
+  pros::delay(2000);
 
   chassis.pid_turn_set(45_deg, TURN_SPEED);
   chassis.pid_wait();
+  pros::delay(2000);
 
   chassis.pid_turn_set(0_deg, TURN_SPEED);
   chassis.pid_wait();
+  pros::delay(2000);
+
 }
 
 ///
@@ -506,9 +511,49 @@ void leverState() {
     }
 }
 
-// // Define our three possible target states
 
 
+void DiscoreAction() {
+    // Hardstop Angles
+    const double maxUpAngle = 1300.0; 
+    const double minDownAngle = 1.0; // Since it's calibrated to 0, 1.0 is a safe bottom threshold
+    
+    // Toggle state: false = target is DOWN, true = target is UP
+    bool targetIsUp = false; 
+
+    while (true) {
+        double current_angle = discore.get_position();
+
+        // 1. TOGGLE LOGIC
+        // get_digital_new_press ensures it only triggers once per button click
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+            targetIsUp = !targetIsUp; // Flip the state
+        }
+
+        // 2. MOVEMENT & HOLDING LOGIC
+        if (targetIsUp) {
+            // GOAL: Move UP and HOLD
+            if (current_angle < maxUpAngle) {
+                discore.move_voltage(12000);  // Move up at max speed (12V)
+            } else {
+                discore.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+                discore.move_voltage(4000);   // Hold firmly at top (4V)
+            }
+        } else {
+            // GOAL: Move DOWN and HOLD
+            if (current_angle > minDownAngle) {
+                discore.move_voltage(-12000); // Move down at max speed (12V)
+            } else {
+                discore.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+                discore.move_voltage(-1000);  // Hold gently at bottom (1V)
+                // gate.set(false);           // (Optional) Retained from your original code
+            }
+        }
+
+        // Proper PROS delay to prevent task starvation
+        pros::delay(20);
+    }
+}
 
 
 
@@ -573,6 +618,7 @@ void grab_blue_reject_red() {
 }
 
 void RedRightFourRushWing() {
+  chassis.odom_reset();
   matchLoad.set(true);
   //lift.set(true);
   intake.move(127);
@@ -585,13 +631,13 @@ void RedRightFourRushWing() {
   chassis.pid_wait();
   chassis.pid_drive_set(-15_in, DRIVE_SPEED);
   chassis.pid_wait();
-  pros::delay(350);
-  chassis.pid_drive_set(4.5_in, DRIVE_SPEED);
-  chassis.pid_wait();
-  pros::delay(100);
-  chassis.pid_drive_set(-4.5_in, DRIVE_SPEED);
-  chassis.pid_wait();
-  pros::delay(350);
+  pros::delay(400);
+  // chassis.pid_drive_set(4.5_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // pros::delay(100);
+  // chassis.pid_drive_set(-4.5_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // pros::delay(350);
   chassis.pid_odom_set(14_in, DRIVE_SPEED);
   chassis.pid_wait();
   chassis.pid_turn_set(-120_deg, TURN_SPEED);
@@ -601,9 +647,8 @@ void RedRightFourRushWing() {
   chassis.pid_drive_set(-5_in, DRIVE_SPEED);
     //chassis.pid_wait();
   grab_red_reject_blue();
-//   grab_blue_reject_red();
-//   chassis.pid_wait();
- // Into the long goal!
+
+  // Into the long goal!
   chassis.pid_drive_set(2.8_in, DRIVE_SPEED);
   chassis.pid_wait();
   chassis.pid_turn_set(-90_deg, TURN_SPEED);
@@ -626,23 +671,186 @@ void RedRightFourRushWing() {
 
   intake.move(0);  // Turn the intake off
  // Matchload
- 
- // Wing
 
-  chassis.pid_drive_set(-7_in, DRIVE_SPEED);
+  chassis.odom_reset();
+ // Wing
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED);
   chassis.pid_wait();
-  chassis.pid_turn_set(-180_deg, TURN_SPEED);
-  chassis.pid_wait();
-  chassis.pid_drive_set(12_in, DRIVE_SPEED);
-  chassis.pid_wait();
-  chassis.pid_turn_set(-90_deg, TURN_SPEED);
-  chassis.pid_wait();
-  chassis.pid_drive_set(30_in, 60);
-  //chassis.pid_drive_set(30_in, DRIVE_SPEED); ORIGINAL SPEED VALUE
-  chassis.pid_wait_until_index(0);
+  chassis.pid_swing_set(ez::RIGHT_SWING,90_deg,-80, true);
+  chassis.pid_wait(); 
+  pros::delay(2000); // Give it a moment to actually swing before we start the next command
+
+
+  // ORIGINAL WING CODE
+  // chassis.pid_drive_set(-7_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_turn_set(-180_deg, TURN_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_drive_set(12_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_drive_set(30_in, 60);
+  // //chassis.pid_drive_set(30_in, DRIVE_SPEED); ORIGINAL SPEED VALUE
+  // chassis.pid_wait_until_index(0);
   
 }
 
+void RedLeftFourRushWing() {
+  chassis.odom_reset();
+  matchLoad.set(true);
+  //lift.set(true);
+  intake.move(127);
+  
+  // Into the Matchload!
+  chassis.pid_odom_set({{{0_in, 32_in}, fwd, DRIVE_SPEED}},
+                       true);
+  chassis.pid_wait(); 
+  chassis.pid_turn_set(90_deg, TURN_SPEED); 
+  chassis.pid_wait();
+  chassis.pid_drive_set(-15_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(400);
+  // chassis.pid_drive_set(4.5_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // pros::delay(100);
+  // chassis.pid_drive_set(-4.5_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // pros::delay(350);
+  chassis.pid_odom_set(14_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(120_deg, TURN_SPEED);
+  
+  matchLoad.set(false);
+  // intake.move(0); // Turn off intake while we do the color check
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED);
+    //chassis.pid_wait();
+  grab_red_reject_blue();
+
+  // Into the long goal!
+  chassis.pid_drive_set(2.8_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(90_deg, TURN_SPEED);
+  chassis.pid_wait();
+//   chassis.pid_odom_set({{{-10_in, 35_in}, fwd, DRIVE_SPEED}},
+//                        true);
+//   chassis.pid_wait_quick_chain(); 
+  chassis.pid_drive_set(20_in, DRIVE_SPEED);
+//   chassis.pid_wait_quick_chain();  // Long goal aligning
+  chassis.pid_wait();
+
+    //Scoring
+  fireLever.fast(); 
+  pros::delay(500);
+  fireLever.down();
+  //Second Try if Ever
+  fireLever.fast(); 
+  pros::delay(500);
+  fireLever.down();
+
+  intake.move(0);  // Turn the intake off
+ // Matchload
+
+  chassis.odom_reset();
+ // Wing
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_swing_set(ez::RIGHT_SWING,45_deg,-80);
+  chassis.pid_wait();  
+
+
+  // ORIGINAL WING CODE
+  // chassis.pid_drive_set(-7_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_turn_set(-180_deg, TURN_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_drive_set(12_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_drive_set(30_in, 60);
+  // //chassis.pid_drive_set(30_in, DRIVE_SPEED); ORIGINAL SPEED VALUE
+  // chassis.pid_wait_until_index(0);
+  
+}
+
+void RedNineBlockRush() {
+  chassis.odom_reset();
+  matchLoad.set(true);
+  //lift.set(true);
+  intake.move(127);
+  
+  // Into the Matchload!
+  chassis.pid_odom_set({{{0_in, 31_in}, fwd, DRIVE_SPEED}},
+                       true);
+  chassis.pid_wait(); 
+  chassis.pid_turn_set(-90_deg, TURN_SPEED); 
+  chassis.pid_wait();
+  chassis.pid_drive_set(-15_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(400);
+  // chassis.pid_drive_set(4.5_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // pros::delay(100);
+  // chassis.pid_drive_set(-4.5_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // pros::delay(350);
+  chassis.pid_odom_set(14_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-120_deg, TURN_SPEED);
+  
+  matchLoad.set(false);
+  // intake.move(0); // Turn off intake while we do the color check
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED);
+    //chassis.pid_wait();
+  grab_red_reject_blue();
+
+  // Into the long goal!
+  chassis.pid_drive_set(2.8_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  chassis.pid_wait();
+//   chassis.pid_odom_set({{{-10_in, 35_in}, fwd, DRIVE_SPEED}},
+//                        true);
+//   chassis.pid_wait_quick_chain(); 
+  chassis.pid_drive_set(20_in, DRIVE_SPEED);
+//   chassis.pid_wait_quick_chain();  // Long goal aligning
+  chassis.pid_wait();
+
+    //Scoring
+  fireLever.fast(); 
+  pros::delay(500);
+  fireLever.down();
+  //Second Try if Ever
+  fireLever.fast(); 
+  pros::delay(500);
+  fireLever.down();
+
+  intake.move(0);  // Turn the intake off
+ // Matchload
+
+  chassis.odom_reset();
+ // Wing
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_swing_set(ez::RIGHT_SWING,45_deg,-80);
+  chassis.pid_wait();  
+
+
+  // ORIGINAL WING CODE
+  // chassis.pid_drive_set(-7_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_turn_set(-180_deg, TURN_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_drive_set(12_in, DRIVE_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_drive_set(30_in, 60);
+  // //chassis.pid_drive_set(30_in, DRIVE_SPEED); ORIGINAL SPEED VALUE
+  // chassis.pid_wait_until_index(0);
+  
+}
 void BlueRightFourRushWing() {
   matchLoad.set(true);
   //lift.set(true);
@@ -771,67 +979,95 @@ void RedRightTopBottom() {
  // Wing
 }
 void skills_final() {
-
+  chassis.odom_reset();
   //lift.set(true);
   intake.move(127);
-  chassis.pid_odom_set({{{0_in, 31_in}, fwd, DRIVE_SPEED}}, // go to matchload with odom for better accuracy
-                       true); 
+  chassis.pid_drive_set(-31_in, DRIVE_SPEED); // Back up slowly to let the blocks settle and be less likely to bounce out
+
+  // chassis.pid_odom_set({{{0_in, -31_in}, fwd, DRIVE_SPEED}}, // go to matchload with odom for better accuracy
+  //                      true);
   chassis.pid_wait(); 
-  chassis.pid_turn_set(-180_deg, TURN_SPEED); // Turn to face the 2 BLUE blocks
+  // chassis.pid_turn_set(-180_deg, TURN_SPEED); // Turn to face the 2 BLUE blocks
+  // chassis.pid_wait();
+  chassis.pid_drive_set(-20_in, 80); // Back up slowly to let the blocks settle and be less likely to bounce out
   chassis.pid_wait();
-  chassis.pid_drive_set(-20_in, 45); // Back up slowly to let the blocks settle and be less likely to bounce out
-  chassis.pid_wait();
-  chassis.pid_drive_set(8_in, 45); // Nudge forward slowly to grab the blocks without bouncing them out
+  chassis.pid_drive_set(8_in, 80); // Nudge forward slowly to grab the blocks without bouncing them out
   chassis.pid_wait();
   chassis.pid_drive_set(-8_in, DRIVE_SPEED); // Back up to be safe before turning
   chassis.pid_wait();
-  chassis.pid_drive_set(16_in, DRIVE_SPEED); // FOR CALIBRATION - Drive forward to the long goal
-  chassis.pid_wait();
-  chassis.pid_turn_set(-90_deg, TURN_SPEED); // Turn to face the long goal
-  chassis.pid_wait();
-  chassis.pid_drive_set(16_in, DRIVE_SPEED); // Drive forward to long goal
-  chassis.pid_wait();
-  fireLever.fast(); // Fire to the long goal
-  pros::delay(300);
-  fireLever.down();
-  pros::delay(100);
-  fireLever.fast(); // Fire to the long goal
-  pros::delay(400);
-  fireLever.down();
 
+  // chassis.pid_odom_set({{{0_in, -31_in}, fwd, DRIVE_SPEED}}, // go to matchload with odom for better accuracy
+                        // true);
+  chassis.odom_reset();
+  chassis.pid_wait();
+  // chassis.pid_swing_set(ez::RIGHT_SWING, 90_deg, SWING_SPEED, -DRIVE_SPEED);
+  // chassis.pid_wait();
+  // chassis.pid_swing_set(ez::LEFT_SWING, 0_deg, SWING_SPEED, -DRIVE_SPEED);
+  // chassis.pid_wait();
+  chassis.pid_drive_set(17_in, DRIVE_SPEED); // FOR CALIBRATION - Drive forward to the long goal
+  chassis.pid_wait();
+  chassis.pid_turn_set(90_deg, TURN_SPEED); // Turn to face the long goal
+  chassis.pid_wait();
+  chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
+pros::delay(1100); // Give it a moment to actually reach the long goal before we start the next command
+  fireLever.fast(); // Fire to the long goal
+  pros::delay(500);
+  fireLever.down();
+  pros::delay(150);
+  // fireLever.fast(); // Fire to the long goal
+
+  chassis.odom_reset(); 
+  // Reset odom to prepare for the wing
+  // pros::delay(400);
+  // fireLever.down();
+  // pros::delay(100);
+  // chassis.pid_drive_set(-3_in, DRIVE_SPEED); // Drive forward to long goal
+  chassis.pid_wait();
+  // chassis.pid_drive_set(3_in, DRIVE_SPEED); // Drive forward to long goal
+  // chassis.pid_wait();
 
   // 1ST MATCHLOAD  
   matchLoad.set(true);
-  chassis.pid_drive_set(-50_in, DRIVE_SPEED); // Back up to take the matchload
   chassis.pid_wait();
-  pros::delay(350);
+  chassis.pid_drive_set(-36_in, 90); // Back up to take the matchload
+  chassis.pid_wait();
+  
   chassis.pid_drive_set(5_in, DRIVE_SPEED); // Nudge forward to secure the matchload
   chassis.pid_wait();
   pros::delay(350);
   chassis.pid_drive_set(-5_in, DRIVE_SPEED); // Back up to be safe before turning
   chassis.pid_wait();
-  pros::delay(350); // DONE MATCHLOADING
-    chassis.pid_odom_set({{{0_in, 31_in,-270_deg}, fwd, DRIVE_SPEED}}, //
-                       true);
+  pros::delay(100); // DONE MATCHLOADING
+  chassis.pid_drive_set(10_in, DRIVE_SPEED); // Drive forward to the long goal
   chassis.pid_wait();
-  
-  
+  matchLoad.set(false);
+  chassis.odom_reset(); // Reset odom to prepare for the wing
+  chassis.pid_wait();
+  chassis.pid_turn_set(230_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(-20_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(180_deg, TURN_SPEED);
+  chassis.pid_wait();
 
-
-
-  // chassis.pid_drive_set(-4.5in, DRIVE_SPEED);
+  // 2ND MATCHLOAD
+  chassis.pid_drive_set(-80_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_set(-90_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.odom_reset();
+  chassis.pid_wait();
+  chassis.pid_drive_set(17_in, DRIVE_SPEED); // FOR CALIBRATION - Drive forward to the long goal
+  chassis.pid_wait();
+  chassis.pid_turn_set(90_deg, TURN_SPEED); // Turn to face the long goal
+  chassis.pid_wait();
+  chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
+pros::delay(1100); // Give it a moment to actually reach the long goal before we start the next command
+  fireLever.fast(); // Fire to the long goal
+  pros::delay(500);
+  fireLever.down();
+  pros::delay(150);
+  // chassis.pid_swing_set(ez::RIGHT_SWING, -30_deg, SWING_SPEED, DRIVE_SPEED);
   // chassis.pid_wait();
-  // pros::delay(350);
-  // chassis.pid_odom_set(14in, DRIVE_SPEED);
-  // chassis.pid_wait();
-  // chassis.pid_turn_set(-120_deg, TURN_SPEED);
-  // matchLoad.set(false);
-  // chassis.pid_drive_set(-9in, DRIVE_SPEED);
-  //   chassis.pid_wait();
-  // grab_red_reject_blue();
-}
-
-void discoreState() {
-
-
+  // pros::delay(3000); // Give it a moment to actually swing before we start the next command
 }

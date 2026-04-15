@@ -425,8 +425,8 @@
     },
     "upload_options": {
       "description": "Coding is Ez",
-      "icon": "pizza",
-      "slot": 7
+      "icon": "pros",
+      "slot": 1
     },
     "use_early_access": false
   }

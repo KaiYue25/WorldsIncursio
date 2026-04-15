@@ -1,5 +1,6 @@
 #include "main.h"
 #include "autons.hpp"
+#include "pros/misc.h"
 #include "subsystems.hpp"
 
 /////
@@ -18,12 +19,13 @@ ez::Drive chassis(
     4.125,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     233);   // Wheel RPM = cartridge * (motor gevar / wheel gear)
 
+    
 // Uncomment the trackers you're using here!
 // - `8` and `9` are smart ports (making these negative will reverse the sensor)
 //  - you should get positive values on the encoders going FORWARD and RIGHT
 // - `2.75` is the wheel diameter
 // - `4.0` is the distance from the center of the wheel to the center of the robot
- ez::tracking_wheel horiz_tracker(-13, 2.00, -1.75);  // This tracking wheel is perpendicular to the drive wheels
+ ez::tracking_wheel horiz_tracker(-16, 2.00, -1.75);  // This tracking wheel is perpendicular to the drive wheels
  ez::tracking_wheel vert_tracker(12, 2.00, 0.03);   // This tracking wheel is parallel to the drive wheels
 
 /**
@@ -63,7 +65,9 @@ void initialize() {
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.autons_add({
       {"RedRightSide\n\n FourBlockRush", RedRightFourRushWing},
+      {"RedLeftSide\n\n FourBlockRush", RedLeftFourRushWing},
       {"RedTopBottom\n\n FourBlockRush", RedRightTopBottom},
+      
       {"ROBOT_SKILLS\n\n Skills_Challenge", skills_final},
       {"BlueRightSide\n\n FourBlockRush", BlueRightFourRushWing},
       {"Drive\n\nDrive forward and come back", drive_example},
@@ -92,23 +96,10 @@ void initialize() {
   ez::as::initialize();
   pros::Task lever_task(leverState,"Lever Task");
   // pros::Task discore_task(discoreState, "Discore Task");
-  
+  pros::Task discore_task(DiscoreAction, "Discore Task");
 
 }
 
-void descoreUp(){
-  discore.move_absolute(4500, 200);
-}
-
-void descoreDown(){
-  discore.move_absolute(0, 200);
-}
-
-/**
- * Runs while the robot is in the disabled state of Field Management System or
- * the VEX Competition Switch, following either autonomous or opcontrol. When
- * the robot is enabled, this task will exit.
- */
 void disabled() {
   // . . .
 }
@@ -236,9 +227,8 @@ void ez_template_extras() {
     if (master.get_digital(DIGITAL_B) && master.get_digital(DIGITAL_DOWN)) {
       pros::motor_brake_mode_e_t preference = chassis.drive_brake_get();
       
-      chassis.drive_brake_set(preference);
-      swing_example();
-
+  chassis.drive_brake_set(preference);
+  swing_example();
     }
 
     // Allow PID Tuner to iterate
@@ -273,38 +263,31 @@ void opcontrol() {
   bool lastDescoreFunc = descoreFunc;
 
   while (true) {
-    // Toggle descore mode on/off with the DOWN button
-    if (master.get_digital_new_press(DIGITAL_DOWN)) {
-      descoreFunc = !descoreFunc;
-    }
-
-    // Only send a new descore command when the toggle state changes
-    if (descoreFunc != lastDescoreFunc) {
-      if (descoreFunc) {
-        descoreUp();
-      } else {
-        descoreDown();
-      }
-      lastDescoreFunc = descoreFunc;
-    }
 
     // Gives you some extras to make EZ-Template ezier
-    //ez_template_extras();
+    // ez_template_extras();
+  
    
     chassis.opcontrol_arcade_standard(ez::SPLIT);   // Standard split arcade
 
     if (master.get_digital(DIGITAL_L2))
     
       intake.move(127);
+
+    // else if (master.get_digital(DIGITAL_DOWN) ) 
+    //   DiscoreAction();
+      
     else if (master.get_digital(DIGITAL_L1))
       intake.move(-(127)*0.8);
+    
     else
       intake.move(0);
 
-       matchLoad.button_toggle(master.get_digital(DIGITAL_Y));
-       gate.button_toggle(master.get_digital(DIGITAL_X));
-       lift.button_toggle(master.get_digital(DIGITAL_B));
-      
+
+
+      matchLoad.button_toggle(master.get_digital(DIGITAL_Y));
+      gate.button_toggle(master.get_digital(DIGITAL_X));
+      lift.button_toggle(master.get_digital(DIGITAL_B));
 
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
   }

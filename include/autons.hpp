@@ -1,10 +1,14 @@
 #pragma once
 //Functions
+#include "main.h"
+
+
+
+
 void default_constants();
 void calibrateArms();
 void leverState();
-void discoreState();
-
+void DiscoreAction();
 //   ROBOT SKILLS CHALLENGE WORLDS
 void skills_final();
 
@@ -18,6 +22,7 @@ void grab_red_reject_blue();
 void RedRightFourRushWing();
 void RedRightTopBottom();
 void while_motor_at_rest();
+void RedLeftFourRushWing();
 
 //Blue Side 2V2 AUTONOMOUS WORLDS
 void BlueRightFourRushWing();
