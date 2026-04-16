@@ -24,7 +24,7 @@ const int SWING_SPEED = 120;
 
 void default_constants() {
   // P, I, D, and Start I
-  chassis.pid_drive_constants_set(16.0, 0.0,100.0);         // TUNED VALUE  chassis.pid_drive_constants_set(15.0, 0.0,100.0);         
+  chassis.pid_drive_constants_set(14.5, 0.0,100.0);         // TUNED VALUE  chassis.pid_drive_constants_set(15.0, 0.0,100.0);         
   chassis.pid_heading_constants_set(11.0, 0.0, 20.0);        // Holds the robot straight while going forward without odom
   chassis.pid_turn_constants_set(2.0, 0.13, 20.0, 15.0);     // Turn in place constants
   chassis.pid_swing_constants_set(6.0, 0.0, 65.0);           // Swing constants
@@ -555,7 +555,29 @@ void DiscoreAction() {
     }
 }
 
+void DiscoreAutoAction(bool state=true) {
+  const double maxUpAngle = 1300.0;
+  const double minDownAngle = 1.0;
 
+    if (state == true) {
+        // Move UP
+        while (discore.get_position() < maxUpAngle) {
+            discore.move_voltage(12000);
+            pros::delay(20);
+        }
+        discore.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        discore.move_voltage(4000); // Hold at top
+    } 
+    if (state == false) {
+        // Move DOWN
+        while (discore.get_position() > minDownAngle) {
+            discore.move_voltage(-12000);
+            pros::delay(20);
+        }
+        discore.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        discore.move_voltage(-1000); // Hold at bottom
+    }
+}
 
 
 // Optical
@@ -982,19 +1004,19 @@ void skills_final() {
   chassis.odom_reset();
   //lift.set(true);
   intake.move(127);
-  chassis.pid_drive_set(-31_in, DRIVE_SPEED); // Back up slowly to let the blocks settle and be less likely to bounce out
+  chassis.pid_drive_set(-52_in, DRIVE_SPEED); // Back up slowly to let the blocks settle and be less likely to bounce out
 
   // chassis.pid_odom_set({{{0_in, -31_in}, fwd, DRIVE_SPEED}}, // go to matchload with odom for better accuracy
   //                      true);
   chassis.pid_wait(); 
   // chassis.pid_turn_set(-180_deg, TURN_SPEED); // Turn to face the 2 BLUE blocks
   // chassis.pid_wait();
-  chassis.pid_drive_set(-20_in, 80); // Back up slowly to let the blocks settle and be less likely to bounce out
-  chassis.pid_wait();
+  // chassis.pid_drive_set(-10_in, 80); // Back up slowly to let the blocks settle and be less likely to bounce out
+  // chassis.pid_wait();
   chassis.pid_drive_set(8_in, 80); // Nudge forward slowly to grab the blocks without bouncing them out
-  chassis.pid_wait();
+  pros::delay(200); // Give it a moment to actually grab the blocks before we start the next command
   chassis.pid_drive_set(-8_in, DRIVE_SPEED); // Back up to be safe before turning
-  chassis.pid_wait();
+   pros::delay(100); // Give it a moment to actually back up before we start the next command
 
   // chassis.pid_odom_set({{{0_in, -31_in}, fwd, DRIVE_SPEED}}, // go to matchload with odom for better accuracy
                         // true);
@@ -1028,21 +1050,19 @@ pros::delay(1100); // Give it a moment to actually reach the long goal before we
 
   // 1ST MATCHLOAD  
   matchLoad.set(true);
+  chassis.pid_drive_set(-32_in, 90); // Back up to take the matchload
   chassis.pid_wait();
-  chassis.pid_drive_set(-36_in, 90); // Back up to take the matchload
-  chassis.pid_wait();
-  
-  chassis.pid_drive_set(5_in, DRIVE_SPEED); // Nudge forward to secure the matchload
-  chassis.pid_wait();
-  pros::delay(350);
-  chassis.pid_drive_set(-5_in, DRIVE_SPEED); // Back up to be safe before turning
-  chassis.pid_wait();
-  pros::delay(100); // DONE MATCHLOADING
+
+  // chassis.pid_drive_set(5_in, DRIVE_SPEED); // Nudge forward to secure the matchload
+  // chassis.pid_wait();
+   pros::delay(450); // DONE MATCHLOADING
+  // chassis.pid_drive_set(-5_in, DRIVE_SPEED); // Back up to be safe before turning
+  // chassis.pid_wait();
+  // pros::delay(100); // DONE MATCHLOADING
   chassis.pid_drive_set(10_in, DRIVE_SPEED); // Drive forward to the long goal
   chassis.pid_wait();
   matchLoad.set(false);
   chassis.odom_reset(); // Reset odom to prepare for the wing
-  chassis.pid_wait();
   chassis.pid_turn_set(230_deg, TURN_SPEED);
   chassis.pid_wait();
   chassis.pid_drive_set(-20_in, DRIVE_SPEED);
@@ -1055,19 +1075,45 @@ pros::delay(1100); // Give it a moment to actually reach the long goal before we
   chassis.pid_wait();
   chassis.pid_turn_set(-90_deg, TURN_SPEED);
   chassis.pid_wait();
-  chassis.odom_reset();
+  chassis.pid_drive_set(13_in, DRIVE_SPEED); // FOR CALIBRATION - Drive forward to the long goal
   chassis.pid_wait();
-  chassis.pid_drive_set(17_in, DRIVE_SPEED); // FOR CALIBRATION - Drive forward to the long goal
-  chassis.pid_wait();
-  chassis.pid_turn_set(90_deg, TURN_SPEED); // Turn to face the long goal
+  chassis.pid_turn_set(-180_deg, TURN_SPEED); // Turn to face the long goal
   chassis.pid_wait();
   chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
-pros::delay(1100); // Give it a moment to actually reach the long goal before we start the next command
+  pros::delay(1100); // Give it a moment to actually reach the long goal before we start the next command
   fireLever.fast(); // Fire to the long goal
   pros::delay(500);
   fireLever.down();
   pros::delay(150);
-  // chassis.pid_swing_set(ez::RIGHT_SWING, -30_deg, SWING_SPEED, DRIVE_SPEED);
-  // chassis.pid_wait();
-  // pros::delay(3000); // Give it a moment to actually swing before we start the next command
+  chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
+  matchLoad.set(true); 
+  chassis.pid_drive_set(-32_in, 90); // Back up to take the matchload
+  chassis.pid_wait();
+  pros::delay(450); // DONE MATCHLOADING
+  matchLoad.set(false);
+  chassis.pid_drive_set(32_in, DRIVE_SPEED); // Drive forward to long goal
+  chassis.pid_wait();
+  fireLever.fast(); // Fire to the long goal
+  pros::delay(500);
+  fireLever.down();
+  pros::delay(150);
+  chassis.pid_drive_set(-10_in, DRIVE_SPEED); // Drive forward to long goal
+  chassis.pid_wait();
+  chassis.pid_turn_set(-90_deg, TURN_SPEED); // Turn to face the long goal
+  chassis.pid_wait();
+
+  // 3RD MATCHLOAD
+  chassis.pid_drive_set(60_in, DRIVE_SPEED); // Drive forward to long goal
+  chassis.pid_wait();
+  chassis.pid_turn_set(-180_deg, TURN_SPEED); // Turn to face the long goal
+  chassis.pid_wait();
+  chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
+  pros::delay(1100); // Give it a moment to actually reach the long goal before we start the next command
+  fireLever.fast(); // Fire to the long goal
+  pros::delay(500);
+  fireLever.down();
+
+
+
+  
 }

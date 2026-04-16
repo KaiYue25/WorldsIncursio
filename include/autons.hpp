@@ -9,6 +9,7 @@ void default_constants();
 void calibrateArms();
 void leverState();
 void DiscoreAction();
+// void DiscoreAutoAction();
 //   ROBOT SKILLS CHALLENGE WORLDS
 void skills_final();
 
