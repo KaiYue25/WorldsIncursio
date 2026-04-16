@@ -12,6 +12,7 @@ void DiscoreAction();
 // void DiscoreAutoAction();
 //   ROBOT SKILLS CHALLENGE WORLDS
 void skills_final();
+void skills_2();
 
 
 //Optical

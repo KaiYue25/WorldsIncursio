@@ -69,6 +69,8 @@ void initialize() {
       {"RedTopBottom\n\n FourBlockRush", RedRightTopBottom},
       
       {"ROBOT_SKILLS\n\n Skills_Challenge", skills_final},
+      {"ROBOT_SKILLS\n\n Skills_Odom", skills_2},
+
       {"BlueRightSide\n\n FourBlockRush", BlueRightFourRushWing},
       {"Drive\n\nDrive forward and come back", drive_example},
       {"Turn\n\nTurn 3 times.", turn_example},
