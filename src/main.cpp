@@ -70,7 +70,8 @@ void initialize() {
       
       {"ROBOT_SKILLS\n\n Skills_Challenge", skills_final},
       {"ROBOT_SKILLS\n\n Skills_Odom", skills_2},
-
+      {"ROBOT_SKILLS\n\n Swings_Testing", skills_3},
+      
       {"BlueRightSide\n\n FourBlockRush", BlueRightFourRushWing},
       {"Drive\n\nDrive forward and come back", drive_example},
       {"Turn\n\nTurn 3 times.", turn_example},
@@ -94,7 +95,7 @@ void initialize() {
   color_sensor.set_led_pwm(100);
   ez::as::initialize();
   master.rumble(chassis.drive_imu_calibrated() ? "." : "---");
-  chassis.pid_tuner_disable();
+  chassis.pid_tuner_enable();
   ez::as::initialize();
   pros::Task lever_task(leverState,"Lever Task");
   // pros::Task discore_task(discoreState, "Discore Task");
@@ -230,7 +231,7 @@ void ez_template_extras() {
       pros::motor_brake_mode_e_t preference = chassis.drive_brake_get();
       
   chassis.drive_brake_set(preference);
-  swing_example();
+  odom_boomerang_example();
     }
 
     // Allow PID Tuner to iterate
@@ -267,7 +268,7 @@ void opcontrol() {
   while (true) {
 
     // Gives you some extras to make EZ-Template ezier
-    // ez_template_extras();
+    ez_template_extras();
   
    
     chassis.opcontrol_arcade_standard(ez::SPLIT);   // Standard split arcade

@@ -425,8 +425,8 @@
     },
     "upload_options": {
       "description": "Coding is Ez",
-      "icon": "pros",
-      "slot": 1
+      "icon": "clawbot",
+      "slot": 5
     },
     "use_early_access": false
   }
