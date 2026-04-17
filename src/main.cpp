@@ -95,7 +95,7 @@ void initialize() {
   color_sensor.set_led_pwm(100);
   ez::as::initialize();
   master.rumble(chassis.drive_imu_calibrated() ? "." : "---");
-  chassis.pid_tuner_enable();
+  chassis.pid_tuner_disable();
   ez::as::initialize();
   pros::Task lever_task(leverState,"Lever Task");
   // pros::Task discore_task(discoreState, "Discore Task");
@@ -268,7 +268,7 @@ void opcontrol() {
   while (true) {
 
     // Gives you some extras to make EZ-Template ezier
-    ez_template_extras();
+    // ez_template_extras();
   
    
     chassis.opcontrol_arcade_standard(ez::SPLIT);   // Standard split arcade

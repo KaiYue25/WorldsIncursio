@@ -395,7 +395,7 @@ void measure_offsets() {
 void calibrateArms() {
     // 1. Apply a gentle downward voltage. 
     lever.move_voltage(-3000);
-    discore.move_voltage(-3000); 
+    discore.move_voltage(-6000); 
     // 2. Wait a tiny bit to give the motor time to actually start moving
     pros::delay(250); 
     // 3. Create tracking flags to know when each one is finished
@@ -519,18 +519,21 @@ void leverState() {
 
 void DiscoreAction() {
     // Hardstop Angles
-    const double maxUpAngle = 1300.0; 
+    const double maxUpAngle = 200.0; 
     const double minDownAngle = 1.0; // Since it's calibrated to 0, 1.0 is a safe bottom threshold
     
     // Toggle state: false = target is DOWN, true = target is UP
-    bool targetIsUp = false; 
+    bool targetIsUp = true; 
 
     while (true) {
         double current_angle = discore.get_position();
 
         // 1. TOGGLE LOGIC
         // get_digital_new_press ensures it only triggers once per button click
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+            targetIsUp = !targetIsUp; // Flip the state
+        }
+        else{
             targetIsUp = !targetIsUp; // Flip the state
         }
 
@@ -538,18 +541,18 @@ void DiscoreAction() {
         if (targetIsUp) {
             // GOAL: Move UP and HOLD
             if (current_angle < maxUpAngle) {
-                discore.move_voltage(12000);  // Move up at max speed (12V)
+                discore.move_voltage(-12000);  // Move up at max speed (12V)
             } else {
                 discore.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-                discore.move_voltage(4000);   // Hold firmly at top (4V)
+                discore.move_voltage(-4000);   // Hold firmly at top (4V)
             }
         } else {
             // GOAL: Move DOWN and HOLD
             if (current_angle > minDownAngle) {
-                discore.move_voltage(-12000); // Move down at max speed (12V)
+                discore.move_voltage(12000); // Move down at max speed (12V) downwards is negative voltage former
             } else {
                 discore.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-                discore.move_voltage(-1000);  // Hold gently at bottom (1V)
+                discore.move_voltage(1000);  // Hold gently at bottom (1V)
                 // gate.set(false);           // (Optional) Retained from your original code
             }
         }
@@ -1208,19 +1211,21 @@ void skills_2() {
   chassis.pid_drive_set(7_in, DRIVE_SPEED); // Back up to take the matchload
   chassis.pid_wait_quick_chain();
   matchLoad.set(true); 
-  chassis.pid_drive_set(-34_in, 80); // Back up to take the matchload
+  chassis.pid_drive_set(-28_in, DRIVE_SPEED, true, false); // Back up to take the matchload
+  chassis.pid_wait_quick_chain();
+  chassis.pid_drive_set(-5_in, 60, true, false); // Back up to take the matchload
   chassis.pid_wait();
-  chassis.pid_drive_set(1_in, DRIVE_SPEED); // Back up to take the matchload
+  chassis.pid_drive_set(3_in, DRIVE_SPEED); // Back up to take the matchload
   chassis.pid_wait();
-   pros::delay(300); // DONE MATCHLOADING
-  chassis.pid_drive_set(-1_in, DRIVE_SPEED); // Back up to take the matchload
+  pros::delay(300); // DONE MATCHLOADING
+  chassis.pid_drive_set(-6_in, DRIVE_SPEED); // Back up to take the matchload
   chassis.pid_wait();
   //pros::delay(350); // DONE MATCHLOADING
   matchLoad.set(false);
   chassis.pid_drive_set(32_in, DRIVE_SPEED); // Drive forward to long goal
   chassis.pid_wait();
 
-  chassis.pid_drive_set(-3.8_in, DRIVE_SPEED); // Drive forward to long goal
+  chassis.pid_drive_set(-3.5_in, DRIVE_SPEED); // Drive forward to long goal
   chassis.pid_wait();
    fireLever.fast(); // Fire to the long goal
   pros::delay(300);
@@ -1253,11 +1258,17 @@ void skills_2() {
   chassis.pid_drive_set(8_in, DRIVE_SPEED); // Drive forward to long goal
   chassis.pid_wait_quick_chain();
   chassis.pid_drive_set(-8_in, DRIVE_SPEED); // Drive forward to long goal
-  chassis.pid_wait();
+  chassis.pid_wait_quick_chain();
   // Into the long goal!
-  chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
-  chassis.pid_wait();
-  
+  // chassis.odom_reset();
+    chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
+  chassis.pid_wait_quick_chain();
+    chassis.pid_turn_set(-270_deg, TURN_SPEED); // Turn to face the long goal
+  chassis.pid_wait_quick_chain();
+    chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
+  chassis.pid_wait_quick_chain();
+
+
 
 
   
