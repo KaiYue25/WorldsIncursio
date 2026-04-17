@@ -1415,7 +1415,7 @@ chassis.odom_reset();
   chassis.pid_wait();
   chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
   chassis.pid_wait_quick();
-  chassis.pid_turn_set(90_deg, TURN_SPEED); // Turn to face the long goal
+  chassis.pid_turn_set(0_deg, TURN_SPEED); // Turn to face the long goal
   chassis.pid_wait_quick();
   chassis.pid_drive_set(17_in, DRIVE_SPEED); // Drive forward to long goal
   pros::delay(500); 
