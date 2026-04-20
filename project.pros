@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "Worlds Incursio",
+    "project_name": "INCURSIO WORLDS",
     "target": "v5",
     "templates": {
       "EZ-Template": {
@@ -425,8 +425,8 @@
     },
     "upload_options": {
       "description": "Coding is Ez",
-      "icon": "clawbot",
-      "slot": 5
+      "icon": "alien",
+      "slot": 1
     },
     "use_early_access": false
   }

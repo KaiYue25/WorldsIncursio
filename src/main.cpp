@@ -67,10 +67,15 @@ void initialize() {
       {"RedRightSide\n\n FourBlockRush", RedRightFourRushWing},
       {"RedLeftSide\n\n FourBlockRush", RedLeftFourRushWing},
       {"RedTopBottom\n\n FourBlockRush", RedRightTopBottom},
+      {"RedRightSide\n\n NineBlockRush", RedNineBlockRush},
       
       {"ROBOT_SKILLS\n\n Skills_Challenge", skills_final},
       {"ROBOT_SKILLS\n\n Skills_Odom", skills_2},
       {"ROBOT_SKILLS\n\n Swings_Testing", skills_3},
+      {"ROBOT_SKILLS\n\n Skills_4", skills_4},
+      {"ROBOT_SKILLS\n\n Skills_5", skills_5},
+
+
       
       {"BlueRightSide\n\n FourBlockRush", BlueRightFourRushWing},
       {"Drive\n\nDrive forward and come back", drive_example},

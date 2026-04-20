@@ -14,6 +14,8 @@ void DiscoreAction();
 void skills_final();
 void skills_2();
 void skills_3();
+void skills_4();
+void skills_5();
 
 
 //Optical
@@ -23,6 +25,11 @@ void grab_red_reject_blue();
 
 // Red Side 2V2 AUTONOMOUS WORLDS
 void RedRightFourRushWing();
+void RedRightSevenRushWing();
+void RedRightLongBotFiveWing();
+void RedNineBlockRush();
+
+
 void RedRightTopBottom();
 void while_motor_at_rest();
 void RedLeftFourRushWing();
